@@ -77,7 +77,7 @@ class LogoutView(generics.GenericAPIView):
     permission_classes = [
         IsAuthenticated,
     ]
-    authentication_classes = [JWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
 
     def post(self, request, *args, **kwargs):
         if self.request.data.get("all"):
