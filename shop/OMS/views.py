@@ -59,6 +59,7 @@ class LoginAPI(generics.GenericAPIView):
 class UserAPIview(generics.GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializer
+
     # authentication_classes = [JWTAuthentication]
 
     def get(self, request):
@@ -77,9 +78,13 @@ class LogoutView(generics.GenericAPIView):
     permission_classes = [
         IsAuthenticated,
     ]
+
     authentication_classes = [JWTAuthentication]
 
     def post(self, request, *args, **kwargs):
+        """
+        this is post method
+        """
         if self.request.data.get("all"):
             token: OutstandingToken
             for token in OutstandingToken.objects.filter(user=request.user):
