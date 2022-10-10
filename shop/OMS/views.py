@@ -24,16 +24,18 @@ class RegisterApi(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        return Response({
-            "user":
-            UserSerializer(user, context=self.get_serializer_context()).data,
-            "message":
-            "User Created Successfully.  Now perform Login to get your token",
-        })
+        return Response(
+            {
+                "user": UserSerializer(
+                    user, context=self.get_serializer_context()
+                ).data,
+                "message": "User Created Successfully.  Now perform Login to get your token",
+            }
+        )
 
 
 class LoginAPI(generics.GenericAPIView):
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = (permissions.AllowAny,)
     authentication_classes = [JWTAuthentication]
 
     def post(self, request, format=None):
@@ -46,14 +48,16 @@ class LoginAPI(generics.GenericAPIView):
             token = get_tokens_for_user(user)
             return Response({"msg": "login successful", "token": token})
         # login(request, user_obj)
-        return Response({
-            "user": user,
-            "message": "Login Not sucess fully",
-        })
+        return Response(
+            {
+                "user": user,
+                "message": "Login Not sucess fully",
+            }
+        )
 
 
 class UserAPIview(generics.GenericAPIView):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializer
 
     # authentication_classes = [JWTAuthentication]
@@ -66,7 +70,8 @@ class UserAPIview(generics.GenericAPIView):
             {
                 "user": serializer.data,
                 "message": "Login sucess fully",
-            }, )
+            },
+        )
 
 
 class LogoutView(generics.GenericAPIView):
@@ -74,7 +79,7 @@ class LogoutView(generics.GenericAPIView):
         IsAuthenticated,
     ]
 
-    # authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication]
 
     def post(self, request, *args, **kwargs):
         """
@@ -84,8 +89,7 @@ class LogoutView(generics.GenericAPIView):
             token: OutstandingToken
             for token in OutstandingToken.objects.filter(user=request.user):
                 _, _ = BlacklistedToken.objects.get_or_create(token=token)
-            return Response(
-                {"status": "OK, goodbye, all refresh tokens blacklisted"})
+            return Response({"status": "OK, goodbye, all refresh tokens blacklisted"})
         refresh_token = self.request.data.get("refresh_token")
         token = RefreshToken(token=refresh_token)
         token.blacklist()
