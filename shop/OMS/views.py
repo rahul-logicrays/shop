@@ -11,6 +11,10 @@ from django.contrib.auth import authenticate
 from .utils import get_tokens_for_user
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
+from rest_framework_simplejwt.token_blacklist.models import (
+    OutstandingToken,
+    BlacklistedToken,
+)
 
 
 class RegisterApi(generics.GenericAPIView):
@@ -55,7 +59,7 @@ class LoginAPI(generics.GenericAPIView):
 class UserAPIview(generics.GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializer
-    authentication_classes = [JWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
 
     def get(self, request):
         # print(dir(self))
@@ -73,21 +77,15 @@ class LogoutView(generics.GenericAPIView):
     permission_classes = [
         IsAuthenticated,
     ]
+    authentication_classes = [JWTAuthentication]
 
-    def get(self, request):
-        try:
-            print("request.user===", request.user)
-            token = get_tokens_for_user(request.user)
-            print(token)
-            # refresh_token = self.request.data["refresh_token"]
-            # # refresh_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY2Mjk3NjA5MywiaWF0IjoxNjYyODg5NjkzLCJqdGkiOiI0YzU3MmNmMjZmYzQ0YTZjOTI3YjJkOWE0NDUyYWY4ZiIsInVzZXJfaWQiOjF9.WplA-Gj7qmeOyLjRvnd3JOVNwwxDDlr_7IDzOETGHlg"
-            # print("========>>", refresh_token)
-            print(token.get("refresh"))
-            token = RefreshToken(token.get("refresh"))
-            print("============", token)
-            token.blacklist()
-            return Response(
-                {"msg": "Logout Done"}, status=status.HTTP_205_RESET_CONTENT
-            )
-        except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, *args, **kwargs):
+        if self.request.data.get("all"):
+            token: OutstandingToken
+            for token in OutstandingToken.objects.filter(user=request.user):
+                _, _ = BlacklistedToken.objects.get_or_create(token=token)
+            return Response({"status": "OK, goodbye, all refresh tokens blacklisted"})
+        refresh_token = self.request.data.get("refresh_token")
+        token = RefreshToken(token=refresh_token)
+        token.blacklist()
+        return Response({"status": "OK, goodbye"})
