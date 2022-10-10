@@ -80,6 +80,10 @@ class LogoutView(generics.GenericAPIView):
     # authentication_classes = [JWTAuthentication]
 
     def post(self, request, *args, **kwargs):
+
+        """
+        this is post method
+        """
         if self.request.data.get("all"):
             token: OutstandingToken
             for token in OutstandingToken.objects.filter(user=request.user):
